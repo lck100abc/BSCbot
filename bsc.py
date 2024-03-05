@@ -114,28 +114,22 @@ def monitor_wallet_addresses():
             last_checked_blocks[address] = current_block
 
     while True:
+        time.sleep(30)  # Delay for API rate limit considerations
         for address in wallet_addresses:
             latest_tx = get_latest_token_transfer(address)
             if latest_tx and isinstance(latest_tx, dict) and 'blockNumber' in latest_tx:
                 block_number = int(latest_tx['blockNumber'], 16)
                 if address not in last_checked_blocks or block_number > last_checked_blocks[address]:
-                    token_name = latest_tx.get('tokenName', 'Unknown Token')
-                    value = latest_tx.get('value', 'N/A')
-                    token_symbol = latest_tx.get('tokenSymbol', 'N/A')
-                    direction = 'Received' if address.lower() == latest_tx.get('to', '').lower() else 'Sent'
                     message = (
-                        f"🚀 *New BscScan Transaction* 🚀\n\n"
+                        f"🚀 *New Transaction on BSC* 🚀\n\n"
                         f"🔹 *Address*: [{address}](https://bscscan.com/address/{address})\n"
-                        f"🔹 *Direction*: {direction}\n"
-                        f"🔹 *Token*: {token_name} ({token_symbol})\n"
-                        f"🔹 *Value*: {value}\n"
+                        f"🔹 *Direction*: {'Received' if address.lower() == latest_tx.get('to', '').lower() else 'Sent'}\n"
+                        f"🔹 *Token*: {latest_tx.get('tokenName', 'Unknown Token')} ({latest_tx.get('tokenSymbol', 'N/A')})\n"
+                        f"🔹 *Value*: {latest_tx.get('value', 'N/A')}\n"
                         f"🔹 *Block Number*: {block_number}\n"
                     )
                     send_notification(CHAT_ID, message)
                     last_checked_blocks[address] = block_number
-            else:
-                print(f"No new transactions found for address {address} or error occurred.")
-        time.sleep(30)
 
 if __name__ == '__main__':
     monitor_wallet_addresses()
